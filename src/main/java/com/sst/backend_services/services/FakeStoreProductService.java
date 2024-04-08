@@ -1,6 +1,7 @@
 package com.sst.backend_services.services;
 
 import com.sst.backend_services.DTOs.FakestoreProductDto;
+import com.sst.backend_services.exceptions.ProductNotFoundException;
 import com.sst.backend_services.models.Product;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -14,10 +15,15 @@ public class FakeStoreProductService implements ProductService{
     public Product getProductById(long id) {
         RestTemplate restTemplate = new RestTemplate();
         FakestoreProductDto fakestoreProductDto = restTemplate.getForObject("https://fakestoreapi.com/products/"+id, FakestoreProductDto.class);
-        if(fakestoreProductDto != null){
-            return new Product((int) fakestoreProductDto.getId(), fakestoreProductDto.getTitle(), (int) fakestoreProductDto.getPrice(), fakestoreProductDto.getCategory(), fakestoreProductDto.getDescription(), fakestoreProductDto.getImage());
-        }
-        return null;
+
+       try {
+              return convertProductDtoToProduct(fakestoreProductDto);
+         }
+         catch (RuntimeException error)
+         {
+              throw new ProductNotFoundException(id,"Product not found");
+       }
+
     }
 
     public List<Product> getAllProducts()
